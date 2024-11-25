@@ -15,6 +15,11 @@ final class EntryGenerator
         return"1{$description}\t{$link}\t{$host}\t{$port}\r\n";
     }
 
+    private static function writeErrorEntry(string $error): string
+    {
+        return"3{$error}\t\t(NULL)\t0\r\n";
+    }
+
     private static function writeTerminator(): string
     {
         return ".\r\n";
@@ -48,7 +53,12 @@ final class EntryGenerator
 
     private static function createCapsListing(): string
     {
-        return file_get_contents(__DIR__ . '/../config/caps.txt');
+        $filename = __DIR__ . '/../config/caps.txt';
+        if (!file_exists($filename)) {
+            return self::writeErrorEntry('Caps file not present!') . self::writeTerminator();
+        }
+
+        return file_get_contents($filename);
     }
 
     private static function getConnectorAnswer(GopherConfig $config, string $subdomain, string $query): string
