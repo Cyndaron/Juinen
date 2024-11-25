@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../config/gopher-config.php';
+require_once __DIR__ . '/../src/EntryGenerator.php';
+
+/** @var GopherConfig $config */
+$config = require __DIR__ . '/../config/gopher-config.php';
+
+$socket = socket_create(AF_INET, SOCK_STREAM, 0) or die("Could not create socket\n");
+socket_bind($socket, $config->host, $config->port) or die("Could not bind to socket\n");
+socket_listen($socket, 3) or die("Could not set up socket listener\n");
+
+while (true)
+{
+    try {
+        $spawn = socket_accept($socket);
+        if ($spawn instanceof Socket)
+        {
+            $input = (string)socket_read($spawn, 1024);
+            $response = EntryGenerator::getResponseForQuery($config, $input);
+            socket_write($spawn, $response);
+            socket_close($spawn);
+        }
+    } catch (Throwable $e) {
+        echo "{$e}\n";
+        break;
+    }
+}
+
+socket_close($socket);
+exit(0);
